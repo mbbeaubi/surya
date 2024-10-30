@@ -163,22 +163,28 @@ def process_one_batch(images, bboxes, line_text, languages, rec_model, rec_proce
             lang_list.append(l)
     n_list = [None] * len(images)
 
-    if args.compile and first:
-        torch.set_float32_matmul_precision('high')
-        torch._dynamo.config.cache_size_limit = 64
-        rec_model.decoder.model = torch.compile(rec_model.decoder.model)
-        # Run through one batch to compile the model
-        run_recognition(images[:1], lang_list[:1], rec_model, rec_processor, bboxes=bboxes[:1])
+    if args.surya:
+        if args.compile and first:
+            torch.set_float32_matmul_precision('high')
+            torch._dynamo.config.cache_size_limit = 64
+            rec_model.decoder.model = torch.compile(rec_model.decoder.model)
+            # Run through one batch to compile the model
+            run_recognition(images[:1], lang_list[:1], rec_model, rec_processor, bboxes=bboxes[:1])
 
-    start = time.time()
-    predictions_by_image = run_recognition(images, lang_list if args.specify_language else n_list, rec_model, rec_processor, bboxes=bboxes)
-    surya_time = time.time() - start
+        start = time.time()
+        predictions_by_image = run_recognition(images, lang_list if args.specify_language else n_list, rec_model, rec_processor, bboxes=bboxes)
+        surya_time = time.time() - start
 
-    for idx, (pred, ref_text, lang) in enumerate(zip(predictions_by_image, line_text, lang_list)):
-        pred_text = [l.text for l in pred.text_lines]
-        image_score = overlap_score(pred_text, ref_text)
-        for l in lang:
-            surya_scores[CODE_TO_LANGUAGE[l]].append(image_score)
+        for idx, (pred, ref_text, lang) in enumerate(zip(predictions_by_image, line_text, lang_list)):
+            pred_text = [l.text for l in pred.text_lines]
+            image_score = overlap_score(pred_text, ref_text)
+            for l in lang:
+                surya_scores[CODE_TO_LANGUAGE[l]].append(image_score)
+        
+        surya_img_len = len(images)
+    else:
+        surya_time = 0
+        surya_img_len = 0
 
     paddle_time = 0
     paddle_img_len = 0
@@ -240,7 +246,7 @@ def process_one_batch(images, bboxes, line_text, languages, rec_model, rec_proce
             image_score = overlap_score(pred, ref_text)
             tess_scores[TESS_CODE_TO_LANGUAGE[lang]].append(image_score)
 
-    return surya_time, len(images), paddle_time, paddle_img_len, tess_time, tess_img_len
+    return surya_time, surya_img_len, paddle_time, paddle_img_len, tess_time, tess_img_len
 
 
     #if args.debug >= 1:
