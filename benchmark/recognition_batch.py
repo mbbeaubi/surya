@@ -22,6 +22,7 @@ from surya.benchmark.paddle import paddle_ocr_all
 from paddleocr import PaddleOCR
 from PIL import Image
 import io
+from tqdm import tqdm
 
 KEY_LANGUAGES = ["Chinese", "Spanish", "English", "Arabic", "Hindi", "Bengali", "Russian", "Japanese"]
 
@@ -68,7 +69,7 @@ def main():
     surya_time = 0
     paddle_time = 0
     tess_time = 0
-    for idx, batch in enumerate(batched_ds):
+    for idx, batch in tqdm(enumerate(batched_ds), desc='recog batch', total=len(batched_ds)):
         images = [Image.open(io.BytesIO(img["bytes"])) for img in batch["image"]]
         images = convert_if_not_rgb(images)
         bboxes = [bbox for bbox in batch["bboxes"]]
