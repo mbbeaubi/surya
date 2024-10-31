@@ -176,7 +176,7 @@ def process_one_batch(images, bboxes, line_text, languages, rec_model, rec_proce
         predictions_by_image = run_recognition(images, lang_list if args.specify_language else n_list, rec_model, rec_processor, bboxes=bboxes)
         surya_time = time.time() - start
 
-        for idx, (pred, ref_text, lang) in enumerate(zip(predictions_by_image, line_text, lang_list)):
+        for idx, (pred, ref_text, lang) in tqdm(enumerate(zip(predictions_by_image, line_text, lang_list)), desc='scoring surya', total=len(predictions_by_image)):
             pred_text = [l.text for l in pred.text_lines]
             image_score = overlap_score(pred_text, ref_text)
             for l in lang:
@@ -216,7 +216,7 @@ def process_one_batch(images, bboxes, line_text, languages, rec_model, rec_proce
         paddle_time = time.time() - start
         paddle_img_len = len(paddle_imgs)
 
-        for idx, (pred, ref_text, lang) in enumerate(zip(paddle_predictions, paddle_reference, orig_langs)):
+        for idx, (pred, ref_text, lang) in tqdm(enumerate(zip(paddle_predictions, paddle_reference, orig_langs)), desc='scoring paddle', total=len(paddle_predictions)):
             image_score = overlap_score(pred, ref_text)
             paddle_scores[CODE_TO_LANGUAGE[lang]].append(image_score)
 
@@ -243,7 +243,7 @@ def process_one_batch(images, bboxes, line_text, languages, rec_model, rec_proce
         tess_time = time.time() - start
         tess_img_len = len(tess_imgs)
 
-        for idx, (pred, ref_text, lang) in enumerate(zip(tess_predictions, tess_reference, tess_langs)):
+        for idx, (pred, ref_text, lang) in tqdm(enumerate(zip(tess_predictions, tess_reference, tess_langs)), desc='scoring tesseract', total=len(tess_predictions)):
             image_score = overlap_score(pred, ref_text)
             tess_scores[TESS_CODE_TO_LANGUAGE[lang]].append(image_score)
 
