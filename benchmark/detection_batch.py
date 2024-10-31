@@ -47,11 +47,13 @@ def main():
     paddle_time = 0
     surya_time = 0
     tess_time = 0
+    img_len = 0
     page_metrics = collections.OrderedDict()
     for batch_idx, batch in tqdm(enumerate(ds_batch), desc='detection batch', total=len(ds_batch)):
         images = [Image.open(io.BytesIO(img['bytes'])) for img in batch['image']]
         images = convert_if_not_rgb(images)
         bboxes = [bbox for bbox in batch['bboxes']]
+        img_len += len(images)
         
         correct_boxes = []
         for i, boxes in enumerate(bboxes):
@@ -151,15 +153,15 @@ def main():
     table_headers = ["Model", "Time (s)", "Time per page (s)"] + metric_types
     table_data = []
     if args.surya:
-        table_data.append(["surya", surya_time, surya_time / len(images)] + [mean_metrics["surya"][m] for m in metric_types])
+        table_data.append(["surya", surya_time, surya_time / img_len] + [mean_metrics["surya"][m] for m in metric_types])
     if args.tesseract:
         table_data.append(
-            ["tesseract", tess_time, tess_time / len(images)] + [mean_metrics["tesseract"][m] for m in metric_types]
+            ["tesseract", tess_time, tess_time / img_len] + [mean_metrics["tesseract"][m] for m in metric_types]
         )
 
     if args.paddle:
         table_data.append(
-            ["paddle", paddle_time, paddle_time / len(images)] + [mean_metrics["paddle"][m] for m in metric_types]
+            ["paddle", paddle_time, paddle_time / img_len] + [mean_metrics["paddle"][m] for m in metric_types]
         )
 
     print(tabulate(table_data, headers=table_headers, tablefmt="github"))
