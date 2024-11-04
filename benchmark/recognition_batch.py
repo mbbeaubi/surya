@@ -52,7 +52,7 @@ def main():
 
     if args.langs:
         langs = args.langs.split(",")
-        dataset = dataset.filter(lambda x: x["language"] in langs, num_proc=4)
+        dataset = dataset.filter(lambda x: x["language"] in langs)
 
     if args.max:
         dataset = dataset.select(range(args.max))
@@ -196,7 +196,10 @@ def process_one_batch(images, bboxes, line_text, languages, rec_model, rec_proce
 
         for idx, lang in enumerate(lang_list):
             try:
-                paddle_lang, _ = parse_lang(lang[0])
+                l = lang[0]
+                if l == 'zh':
+                    l = 'ch'
+                paddle_lang, _ = parse_lang(l)
                 orig_langs.append(lang[0])
                 paddle_valid.append(idx)
                 paddle_langs.append(paddle_lang)
