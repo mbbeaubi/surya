@@ -199,6 +199,10 @@ def process_one_batch(images, bboxes, line_text, languages, rec_model, rec_proce
                 l = lang[0]
                 if l == 'zh':
                     l = 'ch'
+                if l == 'ar':
+                    l = 'arabic'
+                if l == 'ja':
+                    l = 'japan'
                 paddle_lang, _ = parse_lang(l)
                 orig_langs.append(lang[0])
                 paddle_valid.append(idx)
